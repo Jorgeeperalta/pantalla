@@ -107,7 +107,7 @@
               this.$store.state.userId= data.userId;
               this.$store.state.nombre= data.username;
               this.$store.state.cant_pantallas= data.cant_pantallas;
-              this.$router.push('/inicio');
+              this.$router.push('/pantallas');
             } else {
               localStorage.removeItem('token');
               alert(data.message);

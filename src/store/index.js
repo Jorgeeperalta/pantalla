@@ -12,6 +12,7 @@ export default new Vuex.Store({
     nombreComercio: '',
     cant_pantallas: '',
     url: 'http://jorgeperalta-001-site4.itempurl.com/apipasarela/',
+    pkpantalla: '',
   },
   getters: {
   },

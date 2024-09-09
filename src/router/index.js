@@ -5,6 +5,8 @@ import Login from "../components/Login-pass.vue";
 import Datos from "../views/Datos.vue";
 import Pasarela from "../components/Pasarela.vue";
 import Tabla from "../components/Tabla.vue";
+import Pantallas from "../components/Pantallas.vue";
+import Precios from "../components/Precios.vue";
 Vue.use(VueRouter);
 
 const routes = [
@@ -19,8 +21,18 @@ const routes = [
     component: Login,
   },
   {
-    path: "/inicio",
-    name: "inicio",
+    path: "/pantallas",
+    name: "pantallas",
+    component: Pantallas,
+  },
+  {
+    path: "/lista",
+    name: "lista",
+    component: Precios,
+  },
+  {
+    path: "/productos",
+    name: "productos",
     component: Tabla,
   },
   {

@@ -2,22 +2,14 @@
   <v-app>
 
       <v-app-bar
-        absolute
+      
         :color="$store.state.color"
-        dark
-        shrink-on-scroll
-    
-        scroll-target="#scrolling-techniques-2"
-      >
-       
-
-        <v-app-bar-nav-icon></v-app-bar-nav-icon>
-
-     
-
+        :elevation="24">
+        <div style="text-align: center; width: 100%">
+          <h1>{{  this.$store.state.nombre }}</h1>
+          </div>
         <v-spacer></v-spacer>
-
-        <v-spacer></v-spacer>
+          <v-spacer></v-spacer>
 
         <v-btn v-if="$store.state.btnLogin" @click="login" target="_blank" text>
           <span class="mr-2">LOGIN</span>
@@ -25,11 +17,13 @@
         </v-btn>
       </v-app-bar>
     
-       
+      
+   
         
             <router-view /> 
     
    
+       
   
   </v-app>
 </template>

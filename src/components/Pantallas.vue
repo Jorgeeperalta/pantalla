@@ -1,22 +1,22 @@
 <template>
   <v-app>
-  
+ 
   <v-data-table
     :headers="headers"
-    :items="productos"
+    :items="pantallas"
     sort-by="calories"
     class="elevation-1"
      item-key="pkproducto"
   >
     <template v-slot:top>
       <v-toolbar flat>
-        <v-toolbar-title>Productos</v-toolbar-title>
+        <v-toolbar-title>Pantallas {{totalPantallas }} de  {{ $store.state.cant_pantallas }}</v-toolbar-title>
         <v-divider class="mx-4" inset vertical></v-divider>
         <v-spacer></v-spacer>
         <v-dialog v-model="dialog" max-width="500px">
           <template v-slot:activator="{ on, attrs }">
-            <v-btn  color="primary" dark class="mb-2" v-bind="attrs" v-on="on">
-              Nuevo producto
+            <v-btn v-if="totalPantallas < $store.state.cant_pantallas" color="primary" dark class="mb-2" v-bind="attrs" v-on="on">
+              Nueva pantalla 
             
             </v-btn>
           </template>
@@ -40,51 +40,15 @@
                       label="Descripcion"
                     ></v-text-field>
                   </v-col>
-                  <v-col cols="12" sm="6" md="4">
-                    <v-text-field
-                      v-model="editedItem.stock"
-                      label="Stock"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col cols="12" sm="6" md="6">
-                    <v-text-field
-                      v-model="editedItem.precio"
-                      label="Precio"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col cols="12" sm="6" md="6">
-                    <v-text-field
-                      v-model="editedItem.cantidad"
-                      label="Cantidad"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col cols="12" sm="12" md="6"> <v-radio-group v-model="selected" >
-                      <v-radio label="Con imagenes"  :value="1">
-                        
-                      
-                      </v-radio>
-                      <v-radio label="Sin imagenes"   :value="2">
-                    
-                    
-                      </v-radio>
-                    </v-radio-group></v-col>
-                  <v-col v-if="selected == 1" cols="12" sm="12" md="12">
-                    <form @submit.prevent="submitForm">
-                   
-                      <input id="fileTest" ref="fileInput" @change="handleFileUpload" type="file">
-                      <v-btn color="blue darken-1" text type="submit">Guardar</v-btn>
-                    </form>
-                  </v-col>
                  
                 </v-row>
               </v-container>
             </v-card-text>
 
             <v-card-actions>
-              <v-btn v-if="selected == 2" color="blue darken-1" text @click="crearProducto ()"> Guardar </v-btn>
               <v-spacer></v-spacer>
               <v-btn color="blue darken-1" text @click="close"> Cancelar </v-btn>
-           
+              <v-btn color="blue darken-1" text @click="save"> Guardar </v-btn>
             </v-card-actions>
           </v-card>
         </v-dialog>
@@ -105,48 +69,31 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
-        <v-dialog v-model="dialogImage"  max-width="300px" max-height="500px" >
-          <v-card>
-            <v-card-text>
-              <img width="250px" height="500px" v-bind:src="selectedImage" class="img-fluid" alt="Imagen ampliada">
-            </v-card-text>
-          </v-card>
-        </v-dialog>
       </v-toolbar>
     </template>
-   
-    <template v-slot:[`item.rutaimg`]="{ item }">
-            <img
-              @click="zoom(item.rutaimg)"
-              width="60"
-              height="60"
-              v-bind:src="item.rutaimg"
-            />
-            </template>
+    
     <template v-slot:[`item.actions`]="{ item }">
+      <v-icon small class="mr-2" @click="abrirFotos(item)"> mdi-folder-image </v-icon>
+      <v-icon small class="mr-2" @click="abrirProductos(item)"> mdi-shape-plus </v-icon>
       <v-icon small class="mr-2" @click="editItem(item)"> mdi-pencil </v-icon>
       <v-icon small @click="deleteItem(item)"> mdi-delete </v-icon>
+      <v-icon small @click="abrirPasarela(item)"> mdi-checkbox-multiple-blank-outline</v-icon>
+      <v-icon small @click="abrirLista(item)">  mdi-format-align-justify</v-icon>
     </template>
     <template v-slot:no-data>
-      <v-btn color="primary" @click="traerProductos"> Reset </v-btn>
+      <v-btn color="primary" @click="initialize"> Reset </v-btn>
     </template>
-   
-   
   </v-data-table>
 
 </v-app>
 </template>
   <script>
-
+ 
 export default {
   components:{},
   data: () => ({
-    selected: 1,
-    dialogImage: false,
-    selectedImage: '',
-    selectedFile: '',
-    productos: [],
-    pkproducto: '',
+    pantallas: [],
+    pkpantalla: '',
     dialog: false,
     dialogDelete: false,
     headers: [
@@ -157,10 +104,7 @@ export default {
         value: "nombre",
       },
       { text: "Descripcion", value: "descripcion" },
-      { text: "Precio", value: "precio" },
-      { text: "Cantidad", value: "cantidad" },
-      { text: "Imagen", value: "rutaimg" },
-      { text: "Stock", value: "stock" },
+     
       { text: "Actions", value: "actions", sortable: false },
     ],
     totalPantallas:'',
@@ -168,30 +112,23 @@ export default {
     editedItem: {
      nombre:'',
      descripcion:'',
-     precio:'',
-     cantidad:'',
-     stock:''
+   
     },
     defaultItem: {
       nombre:'',
      descripcion:'',
-     precio:'',
-     cantidad:'',
-     stock:''
+    
     },
   
     defaultItem: {
-      name: "",
-      calories: 0,
-      fat: 0,
-      carbs: 0,
-      protein: 0,
+      nombre:'',
+      descripcion:'',
     },
   }),
 
   computed: {
     formTitle() {
-      return this.editedIndex === -1 ? "Nueva producto" : "Edita producto";
+      return this.editedIndex === -1 ? "Nueva pantalla" : "Edita pantalla";
     },
   },
 
@@ -206,48 +143,34 @@ export default {
 
   created() {
    
-    this.traerProductos();
+    this.traerpantallas();
   },
 
   methods: {
-    zoom(rutaImg) {
-      this.selectedImage = rutaImg;
-      this.dialogImage = true;
+    abrirLista(item){
+      this.$store.state.pkpantalla = item.id;
+      console.log(item);
+      this.$router.push('/lista');
     },
-    
-    handleFileUpload(event) {
-        this.selectedFile = event.target.files[0];
-        console.log(this.selectedFile.name);
-        console.log(event.target.files[0]);
+    abrirPasarela(item){
+      this.$store.state.pkpantalla = item.id;
+      console.log(item);
+      this.$router.push('/pasarela');
+    },
+    abrirFotos(item){
+      this.$store.state.pkpantalla = item.id;
+      this.$router.push('/imagenes');
+      console.log(item);
       
     },
-    async submitForm() {
-        if (!this.selectedFile) {
-          alert("Por favor, selecciona un archivo.");
-          return;
-        }
-  
-        const formData = new FormData();
-        formData.append("fileTest", this.selectedFile);
-  
-        try {
-          const response = await fetch(`${this.$store.state.url}upload-file.php`, {
-            method: "POST",
-            body: formData
-          });
-  
-          if (response.ok) {
-         
-            this.crearProducto (this.selectedFile.name);
-                       ///this.save()
-          } else {
-            alert("Error al subir el archivo.");
-          }
-        } catch (error) {
-          console.error("Error:", error);
-          alert("Error al subir el archivo.");
-        }
-      },
+    abrirProductos(item){
+      this.$store.state.pkpantalla = item.id;
+      console.log(item);
+      this.$router.push('/productos');
+    
+     
+    },
+    
     crearProducto () {
       const obj = this
       var myHeaders = new Headers()
@@ -258,11 +181,7 @@ export default {
         opcion: '1',
         nombre: this.editedItem.nombre.toUpperCase(),
         descripcion: this.editedItem.descripcion.toUpperCase(),
-        precio: this.editedItem.precio,
-        cantidad: this.editedItem.cantidad,
-        rutaimg: this.$store.state.url+'files/'+this.selectedFile.name,
-        stock: this.editedItem.stock,
-        id_pantalla: this.$store.state.pkpantalla,
+        estado: 'activo',
         id_usuario: parseInt(sessionStorage.userId)
       })
 
@@ -275,7 +194,7 @@ export default {
       }
 
       var promise = Promise.race([
-        fetch(`${this.$store.state.url}productos.php`, requestOptions)
+        fetch(`${this.$store.state.url}pantallas.php`, requestOptions)
           .then(response => response.json()),
         new Promise((resolve, reject) =>
           setTimeout(() => reject(new Error('Timeout')), 520000)
@@ -285,15 +204,14 @@ export default {
       promise.then(result => console.log(result))
       promise.then(alert('Producto agregado correctamente'))
       promise.catch(error => console.log(error))
-      setTimeout(() => { this.traerProductos() }, 3000)
+      setTimeout(() => { this.traerpantallas() }, 3000)
     },
-    traerProductos () {
+    traerpantallas () {
       //this.$store.state.cant_pantallas
       var myHeaders = new Headers()
       myHeaders.append('Authorization', 'Bearer ' + sessionStorage.token + '')
       var raw = JSON.stringify({
         id_usuario: sessionStorage.userId,
-        id_pantalla: this.$store.state.pkpantalla,
         opcion: '2'
       })
       var requestOptions = {
@@ -304,13 +222,13 @@ export default {
       }
 
       var promise = Promise.race([
-        fetch(`${this.$store.state.url}productos.php`, requestOptions)
+        fetch(`${this.$store.state.url}pantallas.php`, requestOptions)
           .then(response => response.json()),
         new Promise((resolve, reject) =>
           setTimeout(() => reject(new Error('Timeout')), 520000)
         )
       ])
-      promise.then(result => (this.productos = result))
+      promise.then(result => (this.pantallas = result))
       promise.then(result => (this.totalPantallas = result.length))
       promise.then(result => console.log(result))
       promise.catch(error => console.log(error))
@@ -320,7 +238,7 @@ export default {
       myHeaders.append('Authorization', 'Bearer ' + sessionStorage.token + '')
       // myHeaders.append('Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlBFUkFMVEEgIE1BUlRJTiIsImV4cCI6MTY2NjcwMjAyN30.zjw1YpvvPJK1B1EH2NPGZ9gUalembdu38fv2zLpD3jI')
       var raw = JSON.stringify({
-        id: this.pkproducto,
+        id: this.pkpantalla,
       })
       var requestOptions = {
         method: 'DELETE',
@@ -330,7 +248,7 @@ export default {
       }
 
       var promise = Promise.race([
-        fetch(`${this.$store.state.url}productos.php`, requestOptions)
+        fetch(`${this.$store.state.url}pantallas.php`, requestOptions)
           .then(response => response.json()),
         new Promise((resolve, reject) =>
           setTimeout(() => reject(new Error('Timeout')), 520000)
@@ -338,7 +256,7 @@ export default {
       ])
       promise.then(result => console.log(result))
       promise.catch(error => console.log(error))
-      setTimeout(() => { this.traerProductos() }, 3000)
+      setTimeout(() => { this.traerpantallas() }, 3000)
     },
     editarProducto () {
       // eslint-disable-next-line no-console
@@ -350,12 +268,10 @@ export default {
       myHeaders.append('Content-Type', 'application/json')
 
       var raw = JSON.stringify({
-        id: this.pkproducto,
+        id: this.pkpantalla,
         nombre: this.editedItem.nombre.toUpperCase(),
         descripcion: this.editedItem.descripcion.toUpperCase(),
-        precio: this.editedItem.precio,
-        cantidad: this.editedItem.cantidad,
-        stock: this.editedItem.stock,
+        estado: 'activo',
      
       })
 
@@ -367,7 +283,7 @@ export default {
       }
 
       var promise = Promise.race([
-        fetch(`${this.$store.state.url}productos.php`, requestOptions)
+        fetch(`${this.$store.state.url}pantallas.php`, requestOptions)
           .then(response => response.json()),
         new Promise((resolve, reject) =>
           setTimeout(() => reject(new Error('Timeout')), 520000)
@@ -381,25 +297,25 @@ export default {
       //   icon: 'success'
       // }))
       promise.catch(error => console.log(error))
-      setTimeout(() => { this.traerProductos() }, 3000)
+      setTimeout(() => { this.traerpantallas() }, 3000)
     },
     editItem(item) {
-      this.pkproducto = item.id
-      this.editedIndex = this.productos.indexOf(item);
+      this.pkpantalla= item.id
+      this.editedIndex = this.pantallas.indexOf(item);
       this.editedItem = Object.assign({}, item);
       this.dialog = true;
     },
 
     deleteItem(item) {
-      this.pkproducto = item.id
-      this.editedIndex = this.productos.indexOf(item);
+      this.pkpantalla= item.id
+      this.editedIndex = this.pantallas.indexOf(item);
       this.editedItem = Object.assign({}, item);
       this.dialogDelete = true;
     },
 
     deleteItemConfirm() {
       this.eliminarProducto()
-      this.productos.splice(this.editedIndex, 1);
+      this.pantallas.splice(this.editedIndex, 1);
       this.closeDelete();
     },
 
@@ -422,10 +338,10 @@ export default {
     save() {
       if (this.editedIndex > -1) {
         this.editarProducto();
-        Object.assign(this.productos[this.editedIndex], this.editedItem);
+        Object.assign(this.pantallas[this.editedIndex], this.editedItem);
       } else {
         this.crearProducto();
-        this.productos.push(this.editedItem);
+        this.pantallas.push(this.editedItem);
       }
       this.close();
     },
